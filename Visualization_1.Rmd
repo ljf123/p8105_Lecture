@@ -96,4 +96,24 @@ weather_df %>%
   geom_smooth(se = FALSE)
 ```
 
+2d density
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex()
+
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_hex() +
+  facet_grid(~name)
+```
+  geom_bin2d() similar to geom_hex()
+  
+## More kinds of plots
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmax)) +
+  geom_histogram()
+```
 
