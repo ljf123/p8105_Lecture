@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 library(tidyverse)
 library(ggridges)
 ```
@@ -14,16 +15,85 @@ library(ggridges)
 ## Lecture
   "gg" stands for "grammar of graphics"
 
-
-
+## Create the weather data
 ```{r}
-
+weather_df = 
+  rnoaa::meteo_pull_monitors(c("USW00094728", "USC00519397", "USS0023B17S"),
+                      var = c("PRCP", "TMIN", "TMAX"), 
+                      date_min = "2017-01-01",
+                      date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY", 
+                      USC00519397 = "Waikiki_HA",
+                      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+weather_df
 ```
 
-##
-
-
+## Create a ggplot
 ```{r}
-
+ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point()
 ```
+
+alternate way of making this plot
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point()
+```
+
+adding color
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .4)
+```
+  alpha--transparency
+
+Why do `aes` positions matter?
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .4) +
+  geom_smooth(se = FALSE)
+
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .4) +
+  geom_smooth(se = FALSE)
+```
+  se = standard error?
+  The former add (color = name) only to geom_points, the latter add (color = name) to the whole graph?
+
+facet!
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .4) +
+  geom_smooth(se = FALSE) +
+  facet_grid(~name)
+```
+  --Good for individual reading, bad for comparison
+  
+Above is fine, but only limited to min & max values (should always be linear?)
+```{r}
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point() +
+  geom_smooth(se = FALSE)
+
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point(aes(size = prcp), alpha = .3) +
+  geom_smooth(size = 2, se = FALSE)
+
+weather_df %>% 
+  ggplot(aes(x = date, y = prcp, color = name)) + 
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
 
