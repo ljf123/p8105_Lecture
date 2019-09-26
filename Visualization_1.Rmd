@@ -1,0 +1,29 @@
+---
+title: "Visualisation_1"
+author: "J L"
+date: "9/26/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggridges)
+```
+
+## Lecture
+  "gg" stands for "grammar of graphics"
+
+
+
+```{r}
+
+```
+
+##
+
+
+```{r}
+
+```
+

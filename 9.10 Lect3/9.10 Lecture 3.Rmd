@@ -1,0 +1,39 @@
+---
+title: "Untitled"
+author: "J L"
+date: "9/10/2019"
+output: html_document
+---
+
+```{r setup, collapse = TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Section 1
+
+Here's a **code chunk** that samples from a _normal distribution_:
+
+```{r}
+library(tidyverse)
+samp = rnorm(100)
+length(samp)
+```
+
+## Section 2
+
+I can take the mean of the sample, too! 
+The mean is `r mean(samp)`.
+
+## Learning Assessment
+
+```{r learning_assessment}
+la_df = tibble(
+  sample = rnorm(500, mean = 1),
+  gr_th_0 = sample > 0,
+  abs_value = abs(sample)
+)
+
+ggplot(la_df, aes(x = abs_value)) + geom_histogram()
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

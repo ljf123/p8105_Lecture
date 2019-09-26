@@ -1,0 +1,28 @@
+---
+title: "Data_Wrangling"
+author: "J L"
+date: "September 17, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Importing data tables
+
+```{r}
+litters_data = read_csv(file = "./data_import_examples/FAS_litters.csv")
+names(litters_data)
+litters_data = janitor::clean_names(litters_data)
+names(litters_data)
+```
+
+## Looking at data
+
+```{r}
+tail(litters_data, 5)
+skimr::skim(litters_data)
+```
+
