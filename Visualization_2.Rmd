@@ -68,8 +68,26 @@ weather_df %>%
     )
 ```
 
+sqrt trans
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package") + 
+  scale_x_continuous(
+    breaks = c(-15, 0, 15), 
+    labels = c("-15ºC", "0", "15"),
+    limits = c(-20, 30)) + 
+  scale_y_continuous(
+    trans = "sqrt", 
+    position = "right")
+```
 
-## Colors and themes
+## Colors
 
 ```{r}
 weather_df %>% 
@@ -84,6 +102,64 @@ weather_df %>%
     name = "Location", 
     h = c(100, 300)
     )
+```
+
+```{r}
+ggp_base = weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package"
+    ) + 
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE
+    )
+```
+
+## Themes
+
+```{r}
+ggp_base +
+  theme_bw() +
+  theme(legend.position = "bottom")
+
+ggp_base +
+  theme_minimal() +                         ##order matters
+  theme(legend.position = "bottom")   
+```
+theme_bw()--black and white theme
+theme_minimal has to go first, otherwise it will not change the position to "bottom"
+
+(Where do my warnings come from)
+```{r}
+weather_df %>% 
+  filter(is.na(tmin))
+```
+
+## more than one dataset
+
+```{r}
+central_park = 
+  weather_df %>% 
+  filter(name == "CentralPark_NY")
+
+waikiki = 
+  weather_df %>% 
+  filter(name == "Waikiki_HA")
+
+ggplot(data = waikiki, aes(x = date, y = tmax, color = name)) + 
+  geom_point() +
+  geom_line(data = central_park)
+```
+
+(breif aside about colors)
+```{r}
+waikiki %>% 
+  ggplot(aes(x = date, y = tmax, color = "red")) + geom_point()
 ```
 
 
