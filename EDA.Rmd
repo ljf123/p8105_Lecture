@@ -27,6 +27,7 @@ options(
 ```
 
 
+
 ## Load data
 ```{r load_data, cache=TRUE}
 weather_df = 
@@ -102,6 +103,7 @@ weather_df %>%
 ```
 
 
+
 ## (2*2 tables)
 
 a digression ..
@@ -139,6 +141,7 @@ weather_df %>%
   janitor::tabyl(name, cold)
 ```
 (janitor has lots of useful functions)
+
 
 
 ## General summaries
@@ -190,6 +193,7 @@ weather_df %>%
 ```
 
 
+
 ## Grouped mutate
 
 ```{r}
@@ -212,6 +216,7 @@ weather_df %>%
 ```
 
 
+
 ## Window functions in grouped mutates
 
 ```{r}
@@ -220,22 +225,39 @@ weather_df %>%
   mutate(temp_ranking = min_rank(tmax))
 ```
 
+
 ```{r}
 weather_df %>%
   group_by(name, month) %>%
-  filter(min_rank(tmax) < 2)
+  mutate(temp_ranking = min_rank(tmax)) %>% 
+  filter(min_rank(tmax) == 1)   ##(or <2, same result)
 ```
 
+
+If we want to show in order, from hottest to coldest day
 ```{r}
 weather_df %>%
   group_by(name, month) %>%
   filter(min_rank(desc(tmax)) < 4)
 ```
 
+
+* lags and leads (useful for using existing values to predict future ones)
+
+```{r}
+weather_df %>% 
+  group_by(name) %>%
+  mutate(
+    lagged_tmax = lag(tmax)
+  )
+```
+
 ```{r}
 weather_df %>%
   group_by(name) %>%
-  mutate(temp_change = tmax - lag(tmax))
+  mutate(
+    temp_change = tmax - lag(tmax)
+    )
 ```
 
 ```{r}
@@ -245,6 +267,8 @@ weather_df %>%
   summarize(temp_change_sd = sd(temp_change, na.rm = TRUE),
             temp_change_max = max(temp_change, na.rm = TRUE))
 ```
+
+
 
 ## Limitations
 summarize() can only be used with functions that return a single-number summary. This creates a ceiling, even if it is very high. Later we’ll see how to aggregate data in a more general way, and how to perform complex operations on the resulting sub-datasets.
