@@ -26,8 +26,8 @@ options(
 )
 ```
 
-## Load data
 
+## Load data
 ```{r load_data, cache=TRUE}
 weather_df = 
   rnoaa::meteo_pull_monitors(c("USW00094728", "USC00519397", "USS0023B17S"),
@@ -43,9 +43,13 @@ weather_df =
     month = lubridate::floor_date(date, unit = "month")) %>%
   select(name, id, date, month, everything())
 ```
+lubridate is tidyverse adjacent, but not loaded every time automatically when we're librarying tidyverse. So we're using "lubridate::floor date" here above
 
-## group_by
+
+## group_by and counting
 (Warning: group_by change behaviors of key functions, and may cause problems that's hard to debug.)
+Because these (and other) functions will use grouping information if it exists, it is sometimes necessary to remove groups using ungroup().
+
 Does group_by stay in the code chunk or global?
 
 
@@ -54,66 +58,104 @@ weather_df %>%
   group_by(name, month)
 ```
 
+
 ```{r}
 weather_df %>%
   group_by(month) %>%
   summarize(n = n())
 ```
+n() counts the number of observations in the group
 
-```{r}
-weather_df %>%
-  count(month, name = "n_days")
-```
-
-```{r}
-weather_df %>%
-  pull(month) %>% 
-  table
-```
 
 ```{r}
 weather_df %>%
   group_by(month) %>%
   summarize(
     n_obs = n(),
-    n_days = n_distinct(date))
+    n_unique = n_distinct(date)
+    )
 ```
+(Jeff doesn't use n_distinct a lot)
+
+
+If we just need to count things, we don't need to group_by() & summarize(), the shortcut is to just use count()---But it's up to your habits
+```{r}
+weather_df %>%
+  count(month, name = "n_days")
+```
+
+
+why table() in base R is not a good choice:
+```{r}
+weather_df %>%
+  pull(name) %>% 
+  table
+```
+This does not produce a dataframe that we can use afterwards
+
+
+Let's make a nice table
+```{r}
+weather_df %>% 
+  count(name) %>% 
+  knitr::kable()
+```
+
+
+## (2*2 tables)
+
+a digression ..
 
 ```{r}
 weather_df %>% 
+  filter(name != "Waikiki_HA") %>% 
   mutate(
     cold = case_when(
       tmax < 5 ~ "cold",
-      tmax >=5 ~ "not_cold",
-      TRUE     ~ ""
-  )) %>% 
-  filter(name != "Waikiki_HA") %>% 
+      tmax >= 5 ~ "not cold",
+      TRUE ~ ""              ## everything else, assign ""
+    )
+  ) %>% 
   group_by(name, cold) %>% 
-  summarize(count = n())
+  count() %>% 
+  pivot_wider(
+    names_from = cold,
+    values_from = n
+  )
 ```
 
+
+Another way to do this using janitor::tabyl()
 ```{r}
 weather_df %>% 
-  mutate(cold = case_when(
-    tmax < 5 ~ "cold",
-    tmax >=5 ~ "not_cold",
-    TRUE     ~ ""
-  )) %>% 
   filter(name != "Waikiki_HA") %>% 
+  mutate(
+    cold = case_when(
+      tmax < 5 ~ "cold",
+      tmax >= 5 ~ "not cold",
+      TRUE ~ ""              ## everything else, assign ""
+    )
+  ) %>%
   janitor::tabyl(name, cold)
 ```
+(janitor has lots of useful functions)
+
 
 ## General summaries
 
 ```{r}
 weather_df %>%
-  group_by(month) %>%
+  group_by(name) %>%
   summarize(
-    mean_tmax = mean(tmax),
+    n = n(),
+    mean_tmax = mean(tmax, na.rm = TRUE),   
     mean_prec = mean(prcp, na.rm = TRUE),
     median_tmax = median(tmax),
     sd_tmax = sd(tmax))
 ```
+na.rm = TRUE -- remove the missing values?
+Do not set na.rm = TRUE by default! Check the missing values first before removing them.
+
 
 ```{r}
 weather_df %>%
@@ -123,36 +165,54 @@ weather_df %>%
     median_tmax = median(tmax))
 ```
 
+
 ```{r}
 weather_df %>%
   group_by(name, month) %>%
-  summarize(mean_tmax = mean(tmax)) %>%
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+    ) %>%
   ggplot(aes(x = month, y = mean_tmax, color = name)) + 
     geom_point() + geom_line() + 
     theme(legend.position = "bottom")
 ```
 
+
+Same table, but instead of making a plot, we're making this table more readable (if we're providing only this table and not the plot for others). As the original table contains 36 rows, not very readable.
 ```{r}
 weather_df %>%
   group_by(name, month) %>%
-  summarize(mean_tmax = mean(tmax)) %>% 
+  summarize(mean_tmax = mean(tmax), na.rm = TRUE) %>% 
   pivot_wider(
     names_from = name,
     values_from = mean_tmax) %>% 
   knitr::kable(digits = 1)
 ```
 
+
 ## Grouped mutate
 
 ```{r}
 weather_df %>%
   group_by(name) %>%
-  mutate(centered_tmax = tmax - mean(tmax)) %>% 
+  mutate(mean_tmax = mean(tmax, na.rm = TRUE))
+```
+This is mutating in a group-specific fashion
+
+
+```{r}
+weather_df %>%
+  group_by(name) %>%
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    centered_tmax = tmax - mean(tmax)
+    ) %>% 
   ggplot(aes(x = date, y = centered_tmax, color = name)) + 
     geom_point() 
 ```
 
-## Window functions
+
+## Window functions in grouped mutates
 
 ```{r}
 weather_df %>%
