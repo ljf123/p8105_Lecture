@@ -52,6 +52,7 @@ lubridate is tidyverse adjacent, but not loaded every time automatically when we
 Because these (and other) functions will use grouping information if it exists, it is sometimes necessary to remove groups using ungroup().
 
 Does group_by stay in the code chunk or global?
+--only specific in code chunk, not globally.
 
 
 ```{r}
